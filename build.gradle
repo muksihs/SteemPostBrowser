@@ -3,7 +3,7 @@ apply plugin: 'war'
 apply plugin: 'gwt'
 apply plugin: 'eclipse'
 apply plugin: 'eclipse-wtp'
-apply plugin: 'org.akhikhl.gretty'
+apply from: 'https://raw.github.com/gretty-gradle-plugin/gretty/master/pluginScripts/gretty.plugin'
 //apply plugin: 'maven'
 
 version = '20180522'
