@@ -1,10 +1,10 @@
 package steem;
 
-import java.util.Map;
+import com.google.gwt.core.client.JavaScriptObject;
 
 import jsinterop.annotations.JsFunction;
 
 @JsFunction
 public interface SteemCallback<T> {
-	void onResult(Map<String, String> error, T result);
+	void onResult(JavaScriptObject error, T result);
 }
