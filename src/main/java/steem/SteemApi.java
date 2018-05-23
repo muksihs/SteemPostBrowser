@@ -1,5 +1,7 @@
 package steem;
 
+import java.util.HashMap;
+
 import com.github.nmorel.gwtjackson.client.ObjectMapper;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -13,10 +15,8 @@ import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsType;
 import steem.model.accountinfo.AccountInfo;
-import steem.model.discussion.Discussions;
-import steem.model.discussion.Discussions.Discussion;
-import steem.model.discussion.Discussions.JsonMetadata;
-import steem.models.DiscussionsBy;
+import steem.models.Discussion;
+import steem.models.Discussions;
 import steem.models.TrendingTags;
 
 @JsType(namespace = "steem", name = "api", isNative = true)
@@ -109,29 +109,43 @@ public class SteemApi {
 	}
 
 	@JsMethod(name = "getDiscussionsByCreated")
-	private static native void _getDiscussionsByCreated(String tag, //
-			int limit, //
-			String startPermlink, //
-			String startAuthor, //
+	private static native void _getDiscussionsByCreated(JavaScriptObject query, //
 			SteemJsCallback jsCallback);
 
 	@JsOverlay
 	public static void getDiscussionsByCreated(String tag, //
 			int limit, //
+			DiscussionsCallback callback) {
+		getDiscussionsByCreated(tag, null, null, limit, callback);
+	}
+	@JsOverlay
+	public static void getDiscussionsByCreated(String tag, //
 			String startPermlink, //
 			String startAuthor, //
-			TrendingTagsCallback callback) {
-		_getDiscussionsByCreated(tag, limit, startPermlink, startAuthor, (error, result) ->
-			callback.onResult(error, result));
+			int limit, //
+			DiscussionsCallback callback) {
+		JSONObject json = new JSONObject();
+		json.put("tag", new JSONString(tag));
+		json.put("limit", new JSONNumber(limit));
+		if (!(startPermlink==null||startPermlink.trim().isEmpty())) {
+			json.put("start_permlink", new JSONString(startPermlink));
+		}
+		if (!(startAuthor==null||startAuthor.trim().isEmpty())) {
+			json.put("start_author", new JSONString(startAuthor));
+		}
+		_getDiscussionsByCreated(json.getJavaScriptObject(),
+				(error, result) -> callback.onResult(error, result));
+	}
+	
+	public static interface HashMapMapper extends ObjectMapper<HashMap<String, Object>> {}
+
+	public static interface DiscussionsMapper extends ObjectMapper<Discussions> {
 	}
 
-	public static interface DiscussionsByMapper extends ObjectMapper<DiscussionsBy> {
-	}
-
-	public static interface DiscussionsByCallback extends SteemTypedListCallback<DiscussionsBy, DiscussionsByMapper> {
+	public static interface DiscussionsCallback extends SteemTypedListCallback<Discussions, DiscussionsMapper> {
 		@Override
-		default DiscussionsByMapper mapper() {
-			return GWT.create(DiscussionsByMapper.class);
+		default DiscussionsMapper mapper() {
+			return GWT.create(DiscussionsMapper.class);
 		}
 	}
 
@@ -186,9 +200,9 @@ public class SteemApi {
 
 		public static DiscussionCodec discussionCodec = GWT.create(DiscussionCodec.class);
 
-		public static interface JsonMetadataCodec extends ObjectMapper<JsonMetadata> {
-		}
+//		public static interface JsonMetadataCodec extends ObjectMapper<JsonMetadata> {
+//		}
 
-		public static JsonMetadataCodec jsonMetadataCodec = GWT.create(JsonMetadataCodec.class);
+//		public static JsonMetadataCodec jsonMetadataCodec = GWT.create(JsonMetadataCodec.class);
 	}
 }

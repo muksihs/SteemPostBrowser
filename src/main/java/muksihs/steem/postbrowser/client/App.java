@@ -1,6 +1,6 @@
 package muksihs.steem.postbrowser.client;
 
-import java.util.Date;
+import java.util.List;
 
 import com.github.nmorel.gwtjackson.client.ObjectMapper;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -8,44 +8,43 @@ import com.google.gwt.core.shared.GWT;
 
 import gwt.material.design.client.ui.MaterialLoader;
 import steem.SteemApi;
-import steem.SteemApi.TrendingTagsCallback;
-import steem.models.DiscussionsBy;
-import steem.models.TrendingTags;
-import steem.models.TrendingTags.TrendingTag;
+import steem.SteemApi.DiscussionsCallback;
+import steem.models.Discussion;
+import steem.models.Discussions;
 
 public class App implements ScheduledCommand {
 
 	@Override
 	public void execute() {
+		int[] counter = new int[] {0};
 		MaterialLoader.loading(false);
-		TrendingTagsCallback callback = new TrendingTagsCallback() {
+		DiscussionsCallback callback = new DiscussionsCallback() {
 			@Override
-			public void onResult(String error, TrendingTags result) {
+			public void onResult(String error, Discussions result) {
 				if (error != null) {
 					GWT.log("=== ERROR:");
 					GWT.log(error);
 				}
 				if (result != null) {
 					GWT.log("=== RESULT:");
-					if (result.getList() == null) {
+					List<Discussion> list = result.getList();
+					if (list == null) {
 						GWT.log("--- NULL RESULTS");
 						return;
 					}
-					for (TrendingTag tag : result.getList()) {
-						GWT.log(tag.getName() + ": " + tag.getTrending().toString());
+					GWT.log(" === ["+(++counter[0])+"]");
+					for (Discussion discussion : list) {
+						GWT.log(discussion.getAuthor() + ": " + discussion.getTitle()+"\n"+discussion.getPermlink());
+					}
+					if (list.size()>1) {
+						Discussion discussion = list.get(list.size()-1);
+						SteemApi.getDiscussionsByCreated("dlive-porn", discussion.getPermlink(), discussion.getAuthor(), 10, this);
 					}
 				}
 			}
 		};
-		SteemApi.getTrendingTags("dlive-porn", 10, callback);
-		DiscussionsBy test = new DiscussionsBy();
-		test.setLastUpdate(new Date());
-		Mapper mapper = GWT.create(Mapper.class);
-		GWT.log("date format test");
-		GWT.log(mapper.write(test));
-		String jsonText = "{\"parent_author\":null,\"parent_permlink\":null,\"json_metadata\":null,\"last_update\":\"2018-05-22T13:08:54\"}";
-		GWT.log(mapper.read(jsonText).getLastUpdate().toString());
+		SteemApi.getDiscussionsByCreated("dlive-porn", 10, callback);
 	}
-	public static interface Mapper extends ObjectMapper<DiscussionsBy>{}
+	public static interface Mapper extends ObjectMapper<Discussion>{}
 
 }
