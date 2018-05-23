@@ -16,31 +16,34 @@ import steem.model.accountinfo.AccountInfo;
 import steem.model.discussion.Discussions;
 import steem.model.discussion.Discussions.Discussion;
 import steem.model.discussion.Discussions.JsonMetadata;
+import steem.models.DiscussionsBy;
 import steem.models.TrendingTags;
 
-@JsType(namespace = "steem", name = "api", isNative=true)
+@JsType(namespace = "steem", name = "api", isNative = true)
 public class SteemApi {
 	public static native void getAccounts(String[] username, SteemCallbackArray<AccountInfo> callback);
-	
-	@JsMethod(name="getContentReplies")
-	private static native void _getContentReplies(String username, String permlink, SteemCallback_old<JavaScriptObject> discussion);
+
+	@JsMethod(name = "getContentReplies")
+	private static native void _getContentReplies(String username, String permlink,
+			SteemCallback_old<JavaScriptObject> discussion);
+
 	@JsOverlay
 	public static void getContentReplies(String username, String permlink, SteemCallback_old<Discussions> cb) {
-		
-		SteemCallback_old<JavaScriptObject> _cb=new SteemCallback_old<JavaScriptObject>() {
+
+		SteemCallback_old<JavaScriptObject> _cb = new SteemCallback_old<JavaScriptObject>() {
 			@Override
 			public void onResult(JavaScriptObject error, JavaScriptObject result) {
-				if (error!=null || result==null) {
+				if (error != null || result == null) {
 					cb.onResult(error, null);
 					return;
 				}
 				String json = JsonUtils.stringify(result);
-				json = "{\"discussions\":"+json+"}";
+				json = "{\"discussions\":" + json + "}";
 				Discussions discussions;
 				try {
 					discussions = Util.discussionsCodec.read(json);
 				} catch (Exception e) {
-					DomGlobal.console.log("=== "+e.getMessage());
+					DomGlobal.console.log("=== " + e.getMessage());
 					GWT.log(e.getMessage(), e);
 					cb.onResult(error, null);
 					return;
@@ -48,104 +51,144 @@ public class SteemApi {
 				cb.onResult(error, discussions);
 			}
 		};
-		
+
 		_getContentReplies(username, permlink, _cb);
 	}
-	
-	@JsMethod(name="getContent")
+
+	@JsMethod(name = "getContent")
 	private static native void _getContent(String username, String permlink, SteemCallback_old<JavaScriptObject> cb);
+
 	@JsOverlay
 	public static void getContent(String username, String permlink, SteemCallback_old<Discussion> cb) {
-		SteemCallback_old<JavaScriptObject> parseCb=new SteemCallback_old<JavaScriptObject>() {
+		SteemCallback_old<JavaScriptObject> parseCb = new SteemCallback_old<JavaScriptObject>() {
 			@Override
 			public void onResult(JavaScriptObject error, JavaScriptObject result) {
-				if (error!=null) {
+				if (error != null) {
 					cb.onResult(error, null);
 					return;
 				}
-				if (result==null) {
+				if (result == null) {
 					DomGlobal.console.log("getDiscussionsByBlog: NULL RESPONSE.");
 					return;
 				}
 				try {
 					String stringify = JsonUtils.stringify(result);
 					Discussion d = Util.discussionCodec.read(stringify);
-					if (d==null) {
+					if (d == null) {
 						DomGlobal.console.log("Decoding FAIL: d == null!");
 						cb.onResult(error, null);
 						return;
 					}
 					cb.onResult(error, d);
 				} catch (Exception e) {
-					DomGlobal.console.log("Exception: "+e.getMessage());
-				}				
+					DomGlobal.console.log("Exception: " + e.getMessage());
+				}
 			}
 		};
 		_getContent(username, permlink, parseCb);
 	}
-	
-	@JsMethod(name="getTrendingTags")
-	private static native void _getTrendingTags(String afterTag, int limit,
-			SteemJsCallback jsCallback);
+
+	@JsMethod(name = "getTrendingTags")
+	private static native void _getTrendingTags(String afterTag, int limit, SteemJsCallback jsCallback);
+
 	@JsOverlay
 	public static void getTrendingTags(String afterTag, int limit, TrendingTagsCallback callback) {
-		_getTrendingTags(afterTag, limit, (error, result)->{
+		_getTrendingTags(afterTag, limit, (error, result) -> {
 			callback.onResult(error, result);
 		});
 	}
-	public static interface TrendingTagsMapper extends ObjectMapper<TrendingTags>{}
-	public static interface TrendingTagsCallback extends SteemTypedListCallback<TrendingTags, TrendingTagsMapper>{
+
+	public static interface TrendingTagsMapper extends ObjectMapper<TrendingTags> {
+	}
+
+	public static interface TrendingTagsCallback extends SteemTypedListCallback<TrendingTags, TrendingTagsMapper> {
 		@Override
 		default TrendingTagsMapper mapper() {
 			return GWT.create(TrendingTagsMapper.class);
 		}
 	}
 
-	
+	@JsMethod(name = "getDiscussionsByCreated")
+	private static native void _getDiscussionsByCreated(String tag, //
+			int limit, //
+			String startPermlink, //
+			String startAuthor, //
+			SteemJsCallback jsCallback);
+
+	@JsOverlay
+	public static void getDiscussionsByCreated(String tag, //
+			int limit, //
+			String startPermlink, //
+			String startAuthor, //
+			TrendingTagsCallback callback) {
+		_getDiscussionsByCreated(tag, limit, startPermlink, startAuthor, (error, result) ->
+			callback.onResult(error, result));
+	}
+
+	public static interface DiscussionsByMapper extends ObjectMapper<DiscussionsBy> {
+	}
+
+	public static interface DiscussionsByCallback extends SteemTypedListCallback<DiscussionsBy, DiscussionsByMapper> {
+		@Override
+		default DiscussionsByMapper mapper() {
+			return GWT.create(DiscussionsByMapper.class);
+		}
+	}
+
 	private static native void getDiscussionsByBlog(JavaScriptObject query, SteemCallback_old<JavaScriptObject> cb);
+
 	@JsOverlay
 	public static void getDiscussionsByBlog(String username, int count, SteemCallback_old<Discussions> cb) {
-		if (username==null) {
-			username="";
+		if (username == null) {
+			username = "";
 		}
-		username=username.replace("\"", "\\\"");
+		username = username.replace("\"", "\\\"");
 		JSONObject query = new JSONObject();
 		query.put("tag", new JSONString(username));
 		query.put("limit", new JSONNumber(count));
-		SteemCallback_old<JavaScriptObject> parseCb=new SteemCallback_old<JavaScriptObject>() {
+		SteemCallback_old<JavaScriptObject> parseCb = new SteemCallback_old<JavaScriptObject>() {
 			@Override
 			public void onResult(JavaScriptObject error, JavaScriptObject result) {
-				if (error!=null) {
+				if (error != null) {
 					cb.onResult(error, null);
 					return;
 				}
-				if (result==null) {
+				if (result == null) {
 					DomGlobal.console.log("getDiscussionsByBlog: NULL RESPONSE.");
 					return;
 				}
 				try {
-					String stringify = "{\"discussions\":"+JsonUtils.stringify(result)+"}";
+					String stringify = "{\"discussions\":" + JsonUtils.stringify(result) + "}";
 					Discussions d = Util.discussionsCodec.read(stringify);
-					if (d==null) {
+					if (d == null) {
 						DomGlobal.console.log("Decoding FAIL: d == null!");
 						cb.onResult(error, null);
 						return;
 					}
 					cb.onResult(error, d);
 				} catch (Exception e) {
-					DomGlobal.console.log("Exception: "+e.getMessage());
+					DomGlobal.console.log("Exception: " + e.getMessage());
 				}
 			}
 		};
 		getDiscussionsByBlog(query.getJavaScriptObject(), parseCb);
 	}
+
 	public static class Util {
-		//old
-		public static interface DiscussionsCodec extends ObjectMapper<Discussions>{}
+		// old
+		public static interface DiscussionsCodec extends ObjectMapper<Discussions> {
+		}
+
 		public static DiscussionsCodec discussionsCodec = GWT.create(DiscussionsCodec.class);
-		public static interface DiscussionCodec extends ObjectMapper<Discussion>{}
+
+		public static interface DiscussionCodec extends ObjectMapper<Discussion> {
+		}
+
 		public static DiscussionCodec discussionCodec = GWT.create(DiscussionCodec.class);
-		public static interface JsonMetadataCodec extends ObjectMapper<JsonMetadata>{}
+
+		public static interface JsonMetadataCodec extends ObjectMapper<JsonMetadata> {
+		}
+
 		public static JsonMetadataCodec jsonMetadataCodec = GWT.create(JsonMetadataCodec.class);
 	}
 }
