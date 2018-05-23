@@ -125,7 +125,7 @@ public class SteemBroadcast {
 			String title, //
 			String body, //
 			CommentMetadata metadata, //
-			SteemCallback<CommentResult> callback);
+			SteemCallback_old<CommentResult> callback);
 
 	/**
 	 * 
@@ -138,7 +138,7 @@ public class SteemBroadcast {
 	@JsOverlay
 	public static void commentOptions(String wif, String author, //
 			String permlink, CommentOptionsExtensions extensions, //
-			SteemCallback<CommentResult> callback) {
+			SteemCallback_old<CommentResult> callback) {
 		JSONArray extensionsJson = JSONParser.parseStrict(extensions.toJson()).isArray();
 		commentOptions( //
 				wif, author, permlink, //
@@ -170,9 +170,9 @@ public class SteemBroadcast {
 			boolean allowVotes, //
 			boolean allowCurationRewards, //
 			JavaScriptObject javaScriptObject, //
-			SteemCallback<CommentResult> callback);
+			SteemCallback_old<CommentResult> callback);
 	
-	public static native void vote(String wif, String username, String author, String permLink, int weight, SteemCallback<VoteResult> cb);
+	public static native void vote(String wif, String username, String author, String permLink, int weight, SteemCallback_old<VoteResult> cb);
 
 	@JsOverlay
 	private static String escapeJson(String string) {

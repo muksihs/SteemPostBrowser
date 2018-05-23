@@ -4,7 +4,8 @@ import com.google.gwt.core.client.JavaScriptObject;
 
 import jsinterop.annotations.JsFunction;
 
+@FunctionalInterface
 @JsFunction
-public interface SteemCallback<T> {
-	void onResult(JavaScriptObject error, T result);
+public interface SteemJsCallback {
+	void onResult(JavaScriptObject error, JavaScriptObject result);
 }

@@ -12,24 +12,23 @@ import elemental2.dom.DomGlobal;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsType;
+import steem.SteemApi.Util.TrendingTagsMapper;
 import steem.model.accountinfo.AccountInfo;
 import steem.model.discussion.Discussions;
 import steem.model.discussion.Discussions.Discussion;
 import steem.model.discussion.Discussions.JsonMetadata;
+import steem.models.TrendingTags;
 
 @JsType(namespace = "steem", name = "api", isNative=true)
 public class SteemApi {
-	public static native void getTrendingTags(String afterTag, int limit,
-			SteemCallbackArray<TrendingTagsResult> callback);
-	
 	public static native void getAccounts(String[] username, SteemCallbackArray<AccountInfo> callback);
 	
 	@JsMethod(name="getContentReplies")
-	private static native void _getContentReplies(String username, String permlink, SteemCallback<JavaScriptObject> discussion);
+	private static native void _getContentReplies(String username, String permlink, SteemCallback_old<JavaScriptObject> discussion);
 	@JsOverlay
-	public static void getContentReplies(String username, String permlink, SteemCallback<Discussions> cb) {
+	public static void getContentReplies(String username, String permlink, SteemCallback_old<Discussions> cb) {
 		
-		SteemCallback<JavaScriptObject> _cb=new SteemCallback<JavaScriptObject>() {
+		SteemCallback_old<JavaScriptObject> _cb=new SteemCallback_old<JavaScriptObject>() {
 			@Override
 			public void onResult(JavaScriptObject error, JavaScriptObject result) {
 				if (error!=null || result==null) {
@@ -55,10 +54,10 @@ public class SteemApi {
 	}
 	
 	@JsMethod(name="getContent")
-	private static native void _getContent(String username, String permlink, SteemCallback<JavaScriptObject> cb);
+	private static native void _getContent(String username, String permlink, SteemCallback_old<JavaScriptObject> cb);
 	@JsOverlay
-	public static void getContent(String username, String permlink, SteemCallback<Discussion> cb) {
-		SteemCallback<JavaScriptObject> parseCb=new SteemCallback<JavaScriptObject>() {
+	public static void getContent(String username, String permlink, SteemCallback_old<Discussion> cb) {
+		SteemCallback_old<JavaScriptObject> parseCb=new SteemCallback_old<JavaScriptObject>() {
 			@Override
 			public void onResult(JavaScriptObject error, JavaScriptObject result) {
 				if (error!=null) {
@@ -86,9 +85,26 @@ public class SteemApi {
 		_getContent(username, permlink, parseCb);
 	}
 	
-	private static native void getDiscussionsByBlog(JavaScriptObject query, SteemCallback<JavaScriptObject> cb);
+	@JsMethod(name="getTrendingTags")
+	private static native void _getTrendingTags(String afterTag, int limit,
+			SteemJsCallback jsCallback);
+	public static interface TrendingTagsCallback extends SteemTypedListCallback<TrendingTags, TrendingTagsMapper>{
+		@Override
+		default TrendingTagsMapper mapper() {
+			return GWT.create(TrendingTagsMapper.class);
+		}
+	}
 	@JsOverlay
-	public static void getDiscussionsByBlog(String username, int count, SteemCallback<Discussions> cb) {
+	public static void getTrendingTags(String afterTag, int limit, TrendingTagsCallback callback) {
+		_getTrendingTags(afterTag, limit, (error, result)->{
+			callback.onResult(error, result);
+		});
+	}
+
+	
+	private static native void getDiscussionsByBlog(JavaScriptObject query, SteemCallback_old<JavaScriptObject> cb);
+	@JsOverlay
+	public static void getDiscussionsByBlog(String username, int count, SteemCallback_old<Discussions> cb) {
 		if (username==null) {
 			username="";
 		}
@@ -96,7 +112,7 @@ public class SteemApi {
 		JSONObject query = new JSONObject();
 		query.put("tag", new JSONString(username));
 		query.put("limit", new JSONNumber(count));
-		SteemCallback<JavaScriptObject> parseCb=new SteemCallback<JavaScriptObject>() {
+		SteemCallback_old<JavaScriptObject> parseCb=new SteemCallback_old<JavaScriptObject>() {
 			@Override
 			public void onResult(JavaScriptObject error, JavaScriptObject result) {
 				if (error!=null) {
@@ -124,6 +140,9 @@ public class SteemApi {
 		getDiscussionsByBlog(query.getJavaScriptObject(), parseCb);
 	}
 	public static class Util {
+		public static interface TrendingTagsMapper extends ObjectMapper<TrendingTags>{}
+		public static TrendingTagsMapper trendingTagsMapper = GWT.create(TrendingTagsMapper.class);
+		//old
 		public static interface DiscussionsCodec extends ObjectMapper<Discussions>{}
 		public static DiscussionsCodec discussionsCodec = GWT.create(DiscussionsCodec.class);
 		public static interface DiscussionCodec extends ObjectMapper<Discussion>{}
