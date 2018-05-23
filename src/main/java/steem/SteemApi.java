@@ -12,7 +12,6 @@ import elemental2.dom.DomGlobal;
 import jsinterop.annotations.JsMethod;
 import jsinterop.annotations.JsOverlay;
 import jsinterop.annotations.JsType;
-import steem.SteemApi.Util.TrendingTagsMapper;
 import steem.model.accountinfo.AccountInfo;
 import steem.model.discussion.Discussions;
 import steem.model.discussion.Discussions.Discussion;
@@ -88,17 +87,18 @@ public class SteemApi {
 	@JsMethod(name="getTrendingTags")
 	private static native void _getTrendingTags(String afterTag, int limit,
 			SteemJsCallback jsCallback);
-	public static interface TrendingTagsCallback extends SteemTypedListCallback<TrendingTags, TrendingTagsMapper>{
-		@Override
-		default TrendingTagsMapper mapper() {
-			return GWT.create(TrendingTagsMapper.class);
-		}
-	}
 	@JsOverlay
 	public static void getTrendingTags(String afterTag, int limit, TrendingTagsCallback callback) {
 		_getTrendingTags(afterTag, limit, (error, result)->{
 			callback.onResult(error, result);
 		});
+	}
+	public static interface TrendingTagsMapper extends ObjectMapper<TrendingTags>{}
+	public static interface TrendingTagsCallback extends SteemTypedListCallback<TrendingTags, TrendingTagsMapper>{
+		@Override
+		default TrendingTagsMapper mapper() {
+			return GWT.create(TrendingTagsMapper.class);
+		}
 	}
 
 	
@@ -140,8 +140,6 @@ public class SteemApi {
 		getDiscussionsByBlog(query.getJavaScriptObject(), parseCb);
 	}
 	public static class Util {
-		public static interface TrendingTagsMapper extends ObjectMapper<TrendingTags>{}
-		public static TrendingTagsMapper trendingTagsMapper = GWT.create(TrendingTagsMapper.class);
 		//old
 		public static interface DiscussionsCodec extends ObjectMapper<Discussions>{}
 		public static DiscussionsCodec discussionsCodec = GWT.create(DiscussionsCodec.class);

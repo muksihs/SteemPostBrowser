@@ -33,7 +33,7 @@ public class App implements ScheduledCommand {
 				}
 			}
 		};
-		SteemApi.getTrendingTags("", 10, callback);
+		SteemApi.getTrendingTags("dlive-porn", 10, callback);
 	}
 
 }
