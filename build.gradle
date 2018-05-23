@@ -61,7 +61,7 @@ gwt {
 
 	gwtVersion='2.8.2'
 
-	modules 'muksihs.steem.post.browser'
+	modules 'muksihs.steem.postbrowser.SteemPostBrowser'
 	
 	compiler {
 		ea = false //enable assert statements for testing result conditions
@@ -97,7 +97,8 @@ dependencies {
 	//gwt 'org.fusesource.restygwt:restygwt:2.2.+'
 	gwt 'com.google.code.findbugs:jsr305:3.0.0' //required for restygwt compile
 	//gwt 'de.knightsoft-net:gwt-commons-lang3:3.6-0'
-	gwt 'com.fasterxml.jackson.core:jackson-annotations:2.7.+'
+	gwt 'com.fasterxml.jackson.core:jackson-annotations:2.8.+'
+	gwt 'com.github.nmorel.gwtjackson:gwt-jackson:0.15.2'
 	
 	gwt 'com.github.gwtmaterialdesign:gwt-material:2.0+'
 	gwt 'com.github.gwtmaterialdesign:gwt-material-themes:2.0+'
